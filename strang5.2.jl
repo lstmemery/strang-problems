@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.14.5
+# v0.14.7
 
 using Markdown
 using InteractiveUtils
@@ -937,9 +937,17 @@ q34A = [
 	0 0 0 x x
 ];
 
+# ╔═╡ f25b46e5-91ea-4162-ad28-1fb970a4dcf8
+md"""
+a) All rows have an exact duplicate.
+b) There is no possible permutation that doesn't contain a 0. The first 3 need to not include the three 0s, but there ae only 2 rows that have this property.
+"""
+
 # ╔═╡ 9254e969-0f77-4cdb-9198-618fee92d1db
 md"""
 ## Q35
+
+If ``|det(A)| \gt 1 = x``then ``|det(A^n)| = \prod_{i=1}^n A_i = x^n``. The product of any number larger than 1 diverges.
 """
 
 # ╔═╡ Cell order:
@@ -1142,4 +1150,5 @@ md"""
 # ╠═6df45b5a-69b1-45d9-985d-72cd6cd4f55e
 # ╠═f8653bd3-d2f0-43fd-9d64-381aa7a5c5aa
 # ╠═dfe40c17-4f5d-4a63-b6d1-cb4d6f4d178d
+# ╠═f25b46e5-91ea-4162-ad28-1fb970a4dcf8
 # ╠═9254e969-0f77-4cdb-9198-618fee92d1db
