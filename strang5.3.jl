@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.14.7
+# v0.14.8
 
 using Markdown
 using InteractiveUtils
@@ -15,6 +15,9 @@ using Symbolics
 
 # ╔═╡ 15495da5-b616-4540-8d60-6251ebcd8575
 using Plots
+
+# ╔═╡ 39d59b60-bcc9-4c30-a08d-753913e68d91
+using Hadamard
 
 # ╔═╡ 82ec58dd-0373-4438-86e4-4144bb0b0b34
 show_num(i) = L"%$(latexify(i))"
@@ -43,6 +46,9 @@ function cofactor_determinant(A)
 		return sum([A[1,j]*(((-1)^(1 + j)) * cofactor_determinant(cofactor_matrix(A,1,j))) for j=1:size(A)[2]])
 	end
 end
+
+# ╔═╡ 94599138-d357-43f1-876d-1073c0a49714
+first_row_cofactors(A) = [A[1,j]*(((-1)^(1 + j)) * cofactor_determinant(cofactor_matrix(A,1,j))) for j=1:size(A)[2]]
 
 # ╔═╡ 5742bab2-f9fb-415b-a493-6e28b46d257b
 all_cofactors(A) = [(((-1)^(i + j)) * cofactor_determinant(cofactor_matrix(A,i,j))) for i=1:size(A)[1], j=1:size(A)[2]]
@@ -73,6 +79,18 @@ function cross_product(u, v)
 	cofactor_determinant(A)
 end
 
+# ╔═╡ c2b022d8-2ecf-43cf-844d-4b9e4bc198c4
+function cross_product_non_symbolic(u, v)
+	A = vcat([1 1 1], u,v)
+	first_row_cofactors(A)
+end
+
+# ╔═╡ c0b1135e-90b3-4308-b668-4ddd3c5b97fe
+cross_product_non_symbolic([3 2 0], [1 4 0])
+
+# ╔═╡ c6ff16a6-96b8-4f45-af2d-05aca7d97d84
+cross_product_non_symbolic([1 1 1], [1 1 2])
+
 # ╔═╡ 3272d2ca-50c0-4c2f-a363-935af2bf00b3
 function cross_product_length(u,v)
 	cross = cross_product(u,v)
@@ -82,8 +100,14 @@ end
 # ╔═╡ 52a08df7-5625-4833-9ab7-793534697114
 function triangular_area(u, v, w)
 	tri_matrix = hvcat((3, 3, 3), u..., 1, v..., 1, w..., 1)
-	cofactor_determinant(tri_matrix) / 2
+	abs(cofactor_determinant(tri_matrix) / 2)
 end
+
+# ╔═╡ 56fc6a16-5502-4116-a507-1559b6672786
+vector_length(v) = sqrt(reduce(+, v .^2))
+
+# ╔═╡ 1b3b179c-2aa2-4fa4-9eaa-0ccfcd64ed4b
+triple_product(u, v, w) = (cross_product_non_symbolic(u, v)' * w')[1]
 
 # ╔═╡ e2993de4-bd70-11eb-0ad0-75d1f93d8a80
 md"""
@@ -531,39 +555,134 @@ md"""
 """
 
 # ╔═╡ 23912767-7f91-46a3-922e-d818fd89ceef
-q19u = [2 1]
+q19u1 = [2 1]
 
 # ╔═╡ e04efa2f-f2c7-4826-a2cf-d5cc97d7fd5b
-q19v = [2 3]
+q19v1 = [2 3]
+
+# ╔═╡ 14d5c70b-4218-445f-afa2-fe95dddb76ef
+triangular_area(q19u1, q19v1, q19u1 + q19v1) * 2
+
+# ╔═╡ 65e46d42-842c-45ae-817e-5b9489a1a341
+q19u2  = [2 2]
+
+# ╔═╡ 652ebc69-fe28-4710-97da-02b23d4d588b
+q19v2 = [1 3]
+
+# ╔═╡ 623b53e0-dafd-4eeb-a0f0-9753cc9f2dda
+triangular_area(q19u2, q19v2, q19u2 + q19v2) * 2
 
 # ╔═╡ a8596118-a3d6-4b2d-a5e3-2f83d338627f
 md"""
 ## Q20
 """
 
+# ╔═╡ a57ffe79-4b4b-400a-9d70-1fa8e644621d
+abs(cofactor_determinant(hadamard(4)))
+
 # ╔═╡ 229f8c8a-752b-4180-a913-c8f4f7d50d31
 md"""
 ## Q21
+
+a) Largest possible value (because they are orthogonal to one another): ``V = \sqrt{L_1^2+ L_2^2 + L_3^2 + L_4^2}``
 """
+
+# ╔═╡ add51acc-c66e-486f-92de-5d7ec67c4428
+q21H = [
+	1 1 1 1;
+	1 1 1 -1;
+	1 1 -1 -1;
+	1 -1 -1 -1
+]
+
+# ╔═╡ 60cc5463-4b45-44b5-8928-7f52e30004ad
+cofactor_determinant(q21H)
+
+# ╔═╡ 6064ed69-edef-4c2d-89e2-ca42f0a5ba1c
+cofactor_determinant(hadamard(4))
 
 # ╔═╡ f06a8a06-dfb8-42b7-ad8d-057e88d846c4
 md"""
 ## Q22
+
+``x_1y_2 - x_2y_1`` is the same as the 2x2 determinant formula ``ad - bc``. Solving this geometrically would be difficult on the computer.
 """
 
 # ╔═╡ afbadbdb-2134-4a48-b6a2-6695432f3ae0
 md"""
 ## Q23
+
+``\det(A) = ||a||||b||||c||`` since ``V = \det(A)``
+
+``\det(A^TA) = ||a||^2||b||^2||c||^2`` Since the ``\det(A) = \det(A^T)`` and ``\det(A^TA) = \det(A^T)\det(A)``
 """
 
 # ╔═╡ 60dcd6d7-6813-4f21-b1e9-211150ccd645
 md"""
 ## Q24
+
+``i`` is the height
 """
+
+# ╔═╡ 0c17841f-6306-43cd-8b07-5f1cc9b7b262
+q24u = [1 0 0]
+
+# ╔═╡ d9659ea2-f314-4671-b934-6447e67746eb
+q24v = [0 1 0]
+
+# ╔═╡ b3788545-d090-4df9-9b16-75868f43e6c2
+q24w = [2 3 4]
+
+# ╔═╡ 52c6ec70-d84f-4c2c-aaa4-d5efb21ed1c4
+q24A = vcat(q24u, q24v, q24w)
+
+# ╔═╡ c850184f-beaa-4c9d-81fc-ee5360168433
+cofactor_determinant(q24A) # This also the volume
+
+# ╔═╡ 17c048a1-3f51-4bd2-bdaa-d57a282ac2fe
+vector_length([2*i 3*j 4*k])
+
+# ╔═╡ f6394348-9504-4186-bfb7-5873f37c6c10
+cross_product_non_symbolic(q24u, q24v)
+
+# ╔═╡ 383ebbc2-f3e6-4371-b4c9-743b17d5581e
+triple_product(q24u, q24v, q24w)
 
 # ╔═╡ 23aa5e54-2f80-442e-a6a8-4c2609266d8b
 md"""
 ## Q25
+"""
+
+# ╔═╡ 6a1659b6-2270-40af-aa37-681bd7244acb
+q25corners = [4, 8, 16]
+
+# ╔═╡ 014c37c3-3754-439e-9aab-872349b146f5
+md"""
+The number of edges of a hypercube per corner is n, but need to divide by 2 because we  count twice.
+"""
+
+# ╔═╡ ceddaa60-811b-4d53-a5cd-9047b463be87
+hypercube_edges(n) = n * 2 ^ (n - 1)
+
+# ╔═╡ 1624de4f-cbc9-4001-bcff-2cd876a1b6dd
+[hypercube_edges(i) for i=1:5]
+
+# ╔═╡ aa97b07a-9c95-488d-b875-44f34145a296
+md"""
+We know 2-hypercube has 4 (n-1)-faces and, 3 has 6 (n - 1 faces). I suppose the number of cubes in a 4D-hypercube is 8. Coxeter shows the relation is
+
+``E_{m,n} = 2^{n-m}\binom{n}{m}``
+"""
+
+# ╔═╡ 85e942d3-cfb5-46b1-b7ed-6eac55e6aa67
+embedded_hypercubes(m,n) = Int(2^(n-m) * factorial(n) / (factorial(m) * factorial(n - m)))
+
+# ╔═╡ a7467fdc-c534-472d-90b2-1f8a266b2a00
+embedded_hypercubes(3, 4)
+
+# ╔═╡ cd923378-8616-4238-820d-84adeefb26c9
+md"""
+The volume of a hypercube of ``2I`` is ``2^n``
 """
 
 # ╔═╡ 0aec971d-04c6-4dee-bfbd-7109ad44fb4a
@@ -659,20 +778,27 @@ md"""
 # ╠═20eb19f5-d2b1-425b-bd2e-4d142d28cd60
 # ╠═923a3522-b6f8-434d-8bb9-85d8357df51d
 # ╠═15495da5-b616-4540-8d60-6251ebcd8575
+# ╠═39d59b60-bcc9-4c30-a08d-753913e68d91
 # ╠═82ec58dd-0373-4438-86e4-4144bb0b0b34
 # ╠═dc93074a-ebfe-4f4e-88f4-485f5c173d43
 # ╠═43cc9465-3f44-4aad-a45d-5f1da3e67813
 # ╠═58195e48-1e8a-4d16-bdc3-736ce4920a66
 # ╠═fc2d2f95-edc8-41e6-8a10-b1173ddb51b0
 # ╠═b207a078-2bfc-416b-afa2-6ae646647beb
+# ╠═94599138-d357-43f1-876d-1073c0a49714
 # ╠═5742bab2-f9fb-415b-a493-6e28b46d257b
 # ╠═6a1227cb-3248-44ef-8ae1-d1842fb3d22f
 # ╠═ab77210b-e692-48e6-a194-7b5562fa2e13
 # ╠═4f1d0cb1-57a0-4dff-996c-372558de9aef
 # ╠═fc5aef5a-1e0b-4316-86db-af2ab78110dc
 # ╠═98422293-89b8-4f80-830b-9c360f52c42d
+# ╠═c2b022d8-2ecf-43cf-844d-4b9e4bc198c4
+# ╠═c0b1135e-90b3-4308-b668-4ddd3c5b97fe
+# ╠═c6ff16a6-96b8-4f45-af2d-05aca7d97d84
 # ╠═3272d2ca-50c0-4c2f-a363-935af2bf00b3
 # ╠═52a08df7-5625-4833-9ab7-793534697114
+# ╠═56fc6a16-5502-4116-a507-1559b6672786
+# ╠═1b3b179c-2aa2-4fa4-9eaa-0ccfcd64ed4b
 # ╠═e2993de4-bd70-11eb-0ad0-75d1f93d8a80
 # ╠═0f017eb0-a10e-420a-9d68-4a77348b1c26
 # ╠═802f6c24-5657-4e27-bfab-d340ee6111ff
@@ -775,12 +901,36 @@ md"""
 # ╠═4aab9246-c59b-463f-bcc6-24a9a36e9d30
 # ╠═23912767-7f91-46a3-922e-d818fd89ceef
 # ╠═e04efa2f-f2c7-4826-a2cf-d5cc97d7fd5b
+# ╠═14d5c70b-4218-445f-afa2-fe95dddb76ef
+# ╠═65e46d42-842c-45ae-817e-5b9489a1a341
+# ╠═652ebc69-fe28-4710-97da-02b23d4d588b
+# ╠═623b53e0-dafd-4eeb-a0f0-9753cc9f2dda
 # ╠═a8596118-a3d6-4b2d-a5e3-2f83d338627f
+# ╠═a57ffe79-4b4b-400a-9d70-1fa8e644621d
 # ╠═229f8c8a-752b-4180-a913-c8f4f7d50d31
+# ╠═add51acc-c66e-486f-92de-5d7ec67c4428
+# ╠═60cc5463-4b45-44b5-8928-7f52e30004ad
+# ╠═6064ed69-edef-4c2d-89e2-ca42f0a5ba1c
 # ╠═f06a8a06-dfb8-42b7-ad8d-057e88d846c4
 # ╠═afbadbdb-2134-4a48-b6a2-6695432f3ae0
 # ╠═60dcd6d7-6813-4f21-b1e9-211150ccd645
+# ╠═0c17841f-6306-43cd-8b07-5f1cc9b7b262
+# ╠═d9659ea2-f314-4671-b934-6447e67746eb
+# ╠═b3788545-d090-4df9-9b16-75868f43e6c2
+# ╠═52c6ec70-d84f-4c2c-aaa4-d5efb21ed1c4
+# ╠═c850184f-beaa-4c9d-81fc-ee5360168433
+# ╠═17c048a1-3f51-4bd2-bdaa-d57a282ac2fe
+# ╠═f6394348-9504-4186-bfb7-5873f37c6c10
+# ╠═383ebbc2-f3e6-4371-b4c9-743b17d5581e
 # ╠═23aa5e54-2f80-442e-a6a8-4c2609266d8b
+# ╠═6a1659b6-2270-40af-aa37-681bd7244acb
+# ╠═014c37c3-3754-439e-9aab-872349b146f5
+# ╠═ceddaa60-811b-4d53-a5cd-9047b463be87
+# ╠═1624de4f-cbc9-4001-bcff-2cd876a1b6dd
+# ╠═aa97b07a-9c95-488d-b875-44f34145a296
+# ╠═85e942d3-cfb5-46b1-b7ed-6eac55e6aa67
+# ╠═a7467fdc-c534-472d-90b2-1f8a266b2a00
+# ╠═cd923378-8616-4238-820d-84adeefb26c9
 # ╠═0aec971d-04c6-4dee-bfbd-7109ad44fb4a
 # ╠═57fca92e-dea9-49fb-92de-f2f06897bb35
 # ╠═fd36b30f-0075-4260-8227-4f7ffc4ac635
