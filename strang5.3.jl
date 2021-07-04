@@ -13,6 +13,12 @@ using LaTeXStrings
 # ╔═╡ 923a3522-b6f8-434d-8bb9-85d8357df51d
 using Symbolics
 
+# ╔═╡ 1644d02b-a035-4cc3-870e-5913b6bb3489
+using SymbolicUtils
+
+# ╔═╡ 763574f2-9d7c-441d-9fae-3d1253e39db7
+using SymbolicUtils.Rewriters
+
 # ╔═╡ 15495da5-b616-4540-8d60-6251ebcd8575
 using Plots
 
@@ -70,7 +76,7 @@ end
 
 # ╔═╡ fc5aef5a-1e0b-4316-86db-af2ab78110dc
 begin
-	@variables x a b c d e f g h i j k l m n o p q r s t u v w y z D
+	@variables x a b c d e f g h i j k l m n o p q r s t u v w y z D θ ϕ ρ J u1 u2 u3 v1 v2 v3 w1 w2 w3
 end;
 
 # ╔═╡ 98422293-89b8-4f80-830b-9c360f52c42d
@@ -101,6 +107,12 @@ end
 function triangular_area(u, v, w)
 	tri_matrix = hvcat((3, 3, 3), u..., 1, v..., 1, w..., 1)
 	abs(cofactor_determinant(tri_matrix) / 2)
+end
+
+# ╔═╡ 70bd870f-cc32-4840-8ea1-f54bb02855e4
+function two_by_two_inv(A)
+	a,b,c,d = A[1,1], A[1, 2], A[2, 1], A[2, 2]
+	(1/(a*d - b*c)) .* [d -b; -c a]
 end
 
 # ╔═╡ 56fc6a16-5502-4116-a507-1559b6672786
@@ -688,6 +700,16 @@ The volume of a hypercube of ``2I`` is ``2^n``
 # ╔═╡ 0aec971d-04c6-4dee-bfbd-7109ad44fb4a
 md"""
 ## Q26
+
+``V_n = \int_0^1 V_{n-1}(x)dx``
+
+``V_2 = \frac{x^2}{2}``
+
+``V_3 = \int_0^1 V_2(x) = \frac{1}{2} \int_0^1 x^2 = \frac{1}{2} \left(\frac{1}{3} - 0 \right) = \frac{1}{6}``
+
+``V_4 = \int_0^1 V_3(x) = \frac{1}{6} \int_0^1 x^3 = \frac{1}{6} \left(\frac{1}{4} - 0 \right) = \frac{1}{24}``
+
+A 3-simplex has volume ``\frac{1}{6}``. A 4-simplex is volume ``\frac{1}{24}``
 """
 
 # ╔═╡ 57fca92e-dea9-49fb-92de-f2f06897bb35
@@ -695,39 +717,185 @@ md"""
 ## Q27
 """
 
+# ╔═╡ c4a3ea87-00d1-46fc-a086-d26101d60d12
+q27J = [
+	cos(θ) (-r * sin(θ));
+	sin(θ) (r * cos(θ))
+]
+
+# ╔═╡ 208fc203-764a-4ae8-ba86-3706f0d3194a
+
+
+# ╔═╡ 7738c8b7-965b-488c-a481-e16c5892e798
+simplify(sqrt(sum(q27J[:,1] .^ 2))) # Same as 1
+
+# ╔═╡ ad63cc9b-6157-412a-9907-0a219272b1f9
+simplify(sqrt(sum(q27J[:,2] .^ 2))) # Same as r
+
+# ╔═╡ b5efde02-3409-405f-bdf0-7fb701943a60
+simplify(cofactor_determinant(q27J))
+
 # ╔═╡ fd36b30f-0075-4260-8227-4f7ffc4ac635
 md"""
 ## Q28
 """
+
+# ╔═╡ eb6accdb-1bbf-4700-bd24-ff35a778be03
+begin
+	q28x = ρ * sin(ϕ) * cos(θ)
+	q28y = ρ * sin(ϕ) * sin(θ)
+	q28z = ρ * cos(ϕ)
+end;
+
+# ╔═╡ d728aa68-60f5-4577-af85-14cae44b0dcb
+q28J = Symbolics.jacobian([q28x, q28y, q28z], [ρ, ϕ, θ], simplify=true)
+
+# ╔═╡ b50f476d-c3db-4b2f-866e-a6fe3b7b01d6
+simplify(cofactor_determinant(q28J), expand=true, thread_subtree_cutoff=1000)
+
+# ╔═╡ 9c2ac996-bd54-4ecc-9ab1-c26c5b199143
+md"""
+
+``\det(J) = \sin^{3}\left( \phi \right) \cos^{2}\left( \theta \right) \rho^{2} + \sin^{3}\left( \phi \right) \sin^{2}\left( \theta \right) \rho^{2} + \cos^{2}\left( \phi \right) \cos^{2}\left( \theta \right) \rho^{2} \sin\left( \phi \right) + \cos^{2}\left( \phi \right) \sin^{2}\left( \theta \right) \rho^{2} \sin\left( \phi \right)``
+
+``\det(J) = \rho^2\sin(\phi) (\sin^2(\phi)\cos^2(\theta) + \sin^2(\phi)\sin^2(\theta) + \cos^2(\phi)\cos^2(\theta) + \cos^2(\phi)\cos^2(\theta) )``
+
+``\det(J) = \rho^2\sin(\phi) (\sin^2(\phi) + \cos^2(\phi))(\sin^2(\theta) + \cos^2(\theta)) = \rho^2\sin(\phi)``
+
+"""
+
+# ╔═╡ e66c2888-0dfe-4700-8b73-d601e5e1f319
+Differential(q28x*q28y*q28z)(q28x)
+
+# ╔═╡ 4837af43-641b-4b29-90cf-1ca2e320b90b
+simplify(Differential(q28x*q28y*q28z)(ϕ))
 
 # ╔═╡ b4e38353-7df1-4b27-877c-8f22942cbd42
 md"""
 ## Q29
 """
 
+# ╔═╡ 6a86d3ce-6529-4a81-98c2-e6c85bf96034
+begin
+	q29x = r * cos(θ)
+	q29y = r * sin(θ)
+end;
+
+# ╔═╡ 34f929c0-a6c6-4594-9ef1-e427004cdf93
+d29x = Differential(q29x)
+
+# ╔═╡ 210b6890-f4cf-4688-bcc0-430d71b2d007
+Symbolics.jacobian([q29x, q29y], [r, θ])
+
+# ╔═╡ aac2023f-43ab-430f-9358-6602b8ee5563
+begin
+	q29r = x / cos(θ)
+	q29θ = cos(x / r) ^ -1
+end;
+
+# ╔═╡ 28b12566-0f5c-4ed8-8193-a19ceac03bbe
+q29Jinv = simplify.(two_by_two_inv(Symbolics.jacobian([q29x, q29y], [r, θ])), expand=true)
+
+# ╔═╡ c6d689e9-b908-4d66-ad9c-33ef00f27e4d
+simplify(det(q29Jinv)) # 1/r
+
 # ╔═╡ e5b541fc-713c-4c81-9702-877dcfbc9a32
 md"""
 ## Q30
 """
+
+# ╔═╡ 732994bf-8e71-4041-aad3-0d791cd78498
+begin 
+	q30u = [0 0]
+	q30v = [6 0]
+	q30w = [1 4]
+end;
+
+# ╔═╡ 4765b8fd-a99e-4730-9425-b3875778c926
+triangular_area(q30u, q30v, q30w) # Rotation shouldn't change area
+
+# ╔═╡ 410fa9b7-aa75-4dbf-8f0e-447032b59dee
+q30J = [
+	cos(θ) -sin(θ);
+	sin(θ) cos(θ)
+]
+
+# ╔═╡ a49bc510-2b84-441f-a060-007bad4c41aa
+substitute.(q30J, (Dict([θ => 60 * π / 180]),))
+
+# ╔═╡ 5bdbbaff-f9c4-445f-aa98-10684c48dd40
+q30Jinv = simplify.(two_by_two_inv(q30J), expand=true)
+
+# ╔═╡ 74e84aa9-f377-4eb3-8aca-b738514aa415
+substitute.(q30Jinv, (Dict([θ => 60 * π / 180]),))
+
+# ╔═╡ b7511dd3-cfc5-487c-a6b3-e56863682fef
+det(substitute.(q30Jinv, (Dict([θ => 60 * π / 180]),)))
 
 # ╔═╡ c2af082c-2f21-4b89-a568-c7e0880bcd94
 md"""
 ## Q31
 """
 
+# ╔═╡ d88fc0b6-f8cc-40b2-a53b-85e8c4870ae6
+begin
+	q31u = [2 4 0]
+	q31v = [-1 3 0]
+	q31w = [1 2 2]
+end;
+
+# ╔═╡ 9ba0b0cb-a133-4fc8-9e56-d8c56d552f2c
+q31A = vector_length(cross_product_non_symbolic(q31u, q31v))
+
+# ╔═╡ f8ef3e60-e48b-44b4-b039-0e3491b8ceb1
+q31V = triple_product(q31u, q31v, q31w)
+
+# ╔═╡ c058298c-2fad-42f1-828a-b17097388dd9
+vector_length(q31w)
+
+# ╔═╡ 2ab0da01-b912-4cc4-ae97-d2037efe3f76
+acos(q31V / (q31A * vector_length(q31w)) * (π /180))
+
+# ╔═╡ 530b13e1-62b1-48ff-a627-abb602f78567
+q31V / q31A
+
 # ╔═╡ ad50cf45-a168-49c8-aa03-d3a8a2995e67
 md"""
 ## Q32
 """
+
+# ╔═╡ 6c52a3de-0eaf-46f2-99d6-7afa653751c1
+cofactor_determinant(vcat(q31u, q31v, q31w))
 
 # ╔═╡ 3f6d8a71-6ac9-4748-ae3b-f550a54b35b8
 md"""
 ## Q33
 """
 
+# ╔═╡ e0f3eaa8-8ec8-4627-bb32-b0ec9f96992b
+begin
+	q33u = [u1 u2 u3]
+	q33v = [v1 v2 v3]
+	q33w = [w1 w2 w3]
+end;
+
+# ╔═╡ 4010aded-b562-4407-bd2f-aff0722fcac2
+q33A = vcat(q33u, q33v, q33w)
+
+# ╔═╡ 6778a88f-9455-4082-8122-8aa3ab39f102
+cofactor_determinant(q33A)
+
 # ╔═╡ cddbe5a2-d31a-47db-9ce2-7baa1b9b253f
 md"""
 ## Q34
+
+``(u \times v) \cdot w = \v{u_1 & u_2 & u_3 \\ v_1 & v_2 & v_3 \\ w_1 & w_2 & w_3} = \v{w_1 & w_2 & w_3 \\ u_1 & u_2 & u_3 \\ v_1 & v_2 & v_3}``
+
+
+We need a triple product with an even number of permutations. We can start by looking for the triple product that places ``w`` on the top row:
+
+
+``(w \times u) \cdot v``
 """
 
 # ╔═╡ 3c1f401d-647d-40d1-911d-72b96f3b40ba
@@ -735,24 +903,111 @@ md"""
 ## Q35
 """
 
+# ╔═╡ e78978da-e232-4739-860e-6e55b8d9a0ef
+begin
+	q35P = [1 0 -1]
+	q35Q = [1 1 1]
+	q35R = [2 2 1]
+end;
+
+# ╔═╡ bc868670-134c-4dd4-97a7-c5cee7e1994f
+q35u = q35Q - q35P
+
+# ╔═╡ be5e2e7c-cbef-4830-994f-556aaa43ad36
+q35v = q35R - q35P
+
+# ╔═╡ 36215464-d727-4d5e-b86b-c83c66d8b7b6
+q35S = q35P + q35u + q35v
+
+# ╔═╡ 17c43d95-b1fc-4578-886c-6b2848cca55b
+vector_length(cross_product_non_symbolic(q35u, q35v))
+
+# ╔═╡ 0c088b8f-24a0-4593-b3f7-29b8fb734455
+q35O = [0 0 0]
+
+# ╔═╡ f2648850-6266-4f1a-aa07-6687f031b972
+q35w = q35O - q35P
+
+# ╔═╡ 72e5c9d6-2a4b-47c5-be2a-f3a9680558b9
+cross_product_non_symbolic(q35u, q35v)' * q35w'
+
+# ╔═╡ 454a3771-d211-4e3f-950e-e600779fb9f0
+q35T = q35P + q35w + q35u
+
+# ╔═╡ db6ddeab-c433-4c87-a6f2-7903cb0d7eac
+q35U = q35P + q35w + q35v
+
+# ╔═╡ aeff9cba-b992-4b5b-857b-85f3c35f6cb5
+q35V = q35P + q35u + q35v + q35w
+
 # ╔═╡ 5e981696-4955-4951-8215-4f7eea3eb2c6
 md"""
 ## Q36
 """
+
+# ╔═╡ e8cba01b-a0b5-42ce-a661-2ca3dcef7821
+begin
+	q38u = [1 1 0]
+	q38v = [1 2 1]
+end;
+
+# ╔═╡ 0a193abf-4051-474f-b9b1-94018746f78d
+md"""
+The deteriminant will be zero when ``\m{x & y & z} = au + bv``. 
+"""
+
+# ╔═╡ d901cace-3f8a-40f5-8deb-e4e0144257ab
+substitute(cross_product(q38u, q38v), Dict(i => x, j => y, k => z))
 
 # ╔═╡ b5831de7-fe61-4a10-bfbf-ca74676176c3
 md"""
 ## Q37
 """
 
+# ╔═╡ 9ac77af2-00cc-4848-8873-bc2df5db6dab
+begin
+	q39u = [2 3 1]
+	q39v = [1 2 3]
+end;
+
+# ╔═╡ 5871e101-da65-4ee4-ba80-fb0bd4988e5d
+substitute(cross_product(q39u, q39v), Dict(i => x, j => y, k => z))
+
 # ╔═╡ e56e4e7f-15bd-45ea-b44a-51ec42ccbb84
 md"""
 ## Q38
+
+a) ``\det(2A) = 2^n\det(A)`` makes sense from a volumetric point of view if you consider that each row is an edge. Multiplying an edge by 2 doubles it's volumnes. Since you are using ``n`` edges, the doubling occurs ``n`` times.
+
+b) ``\det(A) + \det(A) = \det(A + A)`` for a size 1 matrix.
 """
+
+# ╔═╡ 7ea031f8-92c7-4683-88be-0bc91929cc79
+det([3 1; 5 2] + [9 1; 4 2]) # counter-example for n=2
+
+# ╔═╡ 8d1405e1-a945-401e-bccd-a98a87a2f344
+det([3 1; 5 2])
+
+# ╔═╡ a202bdb6-68d1-486b-8650-0fe54641cab7
+det([9 1; 4 2])
 
 # ╔═╡ 5b092c44-bfd0-4e4c-878a-e6663056e43e
 md"""
 ## Q39
+
+``A^{-1} = \frac{C^T}{\det(A)}``
+
+``\det(A)A^{-1} = C^T``
+
+``\det(\det(A)A^{-1}) = \det(C^T)``
+
+``\det(A)^3  = \det(C^T)``
+
+``\det(A) = \det(C^T)^{\frac{1}{3}}``
+
+``A^{-1} = \frac{C^T}{\det(C^T)^{1/3}}``
+
+``A = \frac{C^{-T}}{\det(C^T)^{1/3}}``
 """
 
 # ╔═╡ 585734d1-a716-4531-ae9e-8a42a2199415
@@ -760,10 +1015,60 @@ md"""
 ## Q40
 """
 
+# ╔═╡ 19ec7991-308b-4268-bca8-4761453725e3
+q40T = Tridiagonal(ones(4)*-1, ones(5) * 2, ones(4)*-1)
+
+# ╔═╡ e564bf60-b461-4c92-b376-b50060199522
+det(q40T)
+
+# ╔═╡ 05aaef9b-6547-4ac4-9bd5-e68c46befbc0
+det(q40T[1:2,1:2])
+
+# ╔═╡ f0a599e7-c244-474f-916e-f273ea99b0fd
+det(q40T[3:5,3:5])
+
+# ╔═╡ 45842349-8c37-4769-990a-949f15962398
+det(q40T[1:2,[1,3]])
+
+# ╔═╡ 75101f0f-d568-4793-8b2b-f4a2e19d4484
+det(q40T[3:5,[2,4,5]])
+
+# ╔═╡ e9666346-6fa6-444d-840e-6351ca888da0
+det(q40T[1:2,1:2])*det(q40T[3:5,3:5])-det(q40T[1:2,[1,3]])*det(q40T[3:5,[2,4,5]])
+
 # ╔═╡ 67e7c046-9136-41c1-b558-3f3cc07453be
 md"""
 ## Q41
 """
+
+# ╔═╡ 7c169ecc-ca8b-468e-bf00-41b53f495513
+q41A = [
+	1 2 3;
+	1 4 7
+]
+
+# ╔═╡ ffae66b7-126b-46c0-a48c-bd9374ee419c
+q41B = q41A'
+
+# ╔═╡ 6892be95-f9ed-4b5e-b63c-69f9e16c08ff
+function cauchy_binet(A, B)
+	(det(A[:,[1, 2]])*det(B[[1,2],:]) + det(A[:,[2,3]])*det(B[[2,3],:])) + det(A[:,[1,3]])*det(B[[1,3],:])
+end
+
+# ╔═╡ 29fc1e15-d4ad-43a6-ac0e-60c8552ecddf
+cauchy_binet(q41A, q41B)
+
+# ╔═╡ fa599fd3-31fa-47f2-b1c9-65da9d6d71a6
+cofactor_determinant(q41A * q41B)
+
+# ╔═╡ 7d939bbc-59f2-49ae-b17a-e9c6ec4cb46c
+det(q41A[:,[1, 2]])
+
+# ╔═╡ 1925090f-5c19-4f46-b4fd-6088a73ca85a
+det(q41A[:,[1, 3]])
+
+# ╔═╡ 715b5071-36d1-4c7d-9a52-ed2287457afa
+det(q41A[:,[2, 3]])
 
 # ╔═╡ a33e6f1c-6219-491a-84cf-7fa01ec08296
 md"""
@@ -771,12 +1076,21 @@ md"""
 """
 
 # ╔═╡ 06cb4f2c-37e9-4ee2-9118-0559343d5039
+md"""
+Consider a 5 by 5 tridiagonal matrix with cofactors `a_{11}` and `a_{12}`. `C_{11}` has the same number of values as the previous 4 by 4 matrix, which we know has 5 terms. `C_{12}` has two more zero values than ``C_{11}``. This causes the 4 x 4 matrix to degenerate into a 3 x 3 matrix, which has 3 values. So ``Terms(Tri(5)) = Terms(Tri(4)) + Terms(Tri(3))``
 
+
+``C_{11} = Tri(4)``
+
+``C_{12} = \m{x & 0 & 0 & 0 \\ 0 & x & y & 0 \\ 0 & z & x & y \\ 0 & 0 & z & x}``
+"""
 
 # ╔═╡ Cell order:
 # ╠═26dfe76b-fbe3-4116-8129-a5538615df66
 # ╠═20eb19f5-d2b1-425b-bd2e-4d142d28cd60
 # ╠═923a3522-b6f8-434d-8bb9-85d8357df51d
+# ╠═1644d02b-a035-4cc3-870e-5913b6bb3489
+# ╠═763574f2-9d7c-441d-9fae-3d1253e39db7
 # ╠═15495da5-b616-4540-8d60-6251ebcd8575
 # ╠═39d59b60-bcc9-4c30-a08d-753913e68d91
 # ╠═82ec58dd-0373-4438-86e4-4144bb0b0b34
@@ -797,6 +1111,7 @@ md"""
 # ╠═c6ff16a6-96b8-4f45-af2d-05aca7d97d84
 # ╠═3272d2ca-50c0-4c2f-a363-935af2bf00b3
 # ╠═52a08df7-5625-4833-9ab7-793534697114
+# ╠═70bd870f-cc32-4840-8ea1-f54bb02855e4
 # ╠═56fc6a16-5502-4116-a507-1559b6672786
 # ╠═1b3b179c-2aa2-4fa4-9eaa-0ccfcd64ed4b
 # ╠═e2993de4-bd70-11eb-0ad0-75d1f93d8a80
@@ -933,19 +1248,87 @@ md"""
 # ╠═cd923378-8616-4238-820d-84adeefb26c9
 # ╠═0aec971d-04c6-4dee-bfbd-7109ad44fb4a
 # ╠═57fca92e-dea9-49fb-92de-f2f06897bb35
+# ╠═c4a3ea87-00d1-46fc-a086-d26101d60d12
+# ╠═208fc203-764a-4ae8-ba86-3706f0d3194a
+# ╠═7738c8b7-965b-488c-a481-e16c5892e798
+# ╠═ad63cc9b-6157-412a-9907-0a219272b1f9
+# ╠═b5efde02-3409-405f-bdf0-7fb701943a60
 # ╠═fd36b30f-0075-4260-8227-4f7ffc4ac635
+# ╠═eb6accdb-1bbf-4700-bd24-ff35a778be03
+# ╠═d728aa68-60f5-4577-af85-14cae44b0dcb
+# ╠═b50f476d-c3db-4b2f-866e-a6fe3b7b01d6
+# ╠═9c2ac996-bd54-4ecc-9ab1-c26c5b199143
+# ╠═e66c2888-0dfe-4700-8b73-d601e5e1f319
+# ╠═4837af43-641b-4b29-90cf-1ca2e320b90b
 # ╠═b4e38353-7df1-4b27-877c-8f22942cbd42
+# ╠═6a86d3ce-6529-4a81-98c2-e6c85bf96034
+# ╠═34f929c0-a6c6-4594-9ef1-e427004cdf93
+# ╠═210b6890-f4cf-4688-bcc0-430d71b2d007
+# ╠═aac2023f-43ab-430f-9358-6602b8ee5563
+# ╠═28b12566-0f5c-4ed8-8193-a19ceac03bbe
+# ╠═c6d689e9-b908-4d66-ad9c-33ef00f27e4d
 # ╠═e5b541fc-713c-4c81-9702-877dcfbc9a32
+# ╠═732994bf-8e71-4041-aad3-0d791cd78498
+# ╠═4765b8fd-a99e-4730-9425-b3875778c926
+# ╠═410fa9b7-aa75-4dbf-8f0e-447032b59dee
+# ╠═a49bc510-2b84-441f-a060-007bad4c41aa
+# ╠═5bdbbaff-f9c4-445f-aa98-10684c48dd40
+# ╠═74e84aa9-f377-4eb3-8aca-b738514aa415
+# ╠═b7511dd3-cfc5-487c-a6b3-e56863682fef
 # ╠═c2af082c-2f21-4b89-a568-c7e0880bcd94
+# ╠═d88fc0b6-f8cc-40b2-a53b-85e8c4870ae6
+# ╠═9ba0b0cb-a133-4fc8-9e56-d8c56d552f2c
+# ╠═f8ef3e60-e48b-44b4-b039-0e3491b8ceb1
+# ╠═c058298c-2fad-42f1-828a-b17097388dd9
+# ╠═2ab0da01-b912-4cc4-ae97-d2037efe3f76
+# ╠═530b13e1-62b1-48ff-a627-abb602f78567
 # ╠═ad50cf45-a168-49c8-aa03-d3a8a2995e67
+# ╠═6c52a3de-0eaf-46f2-99d6-7afa653751c1
 # ╠═3f6d8a71-6ac9-4748-ae3b-f550a54b35b8
+# ╠═e0f3eaa8-8ec8-4627-bb32-b0ec9f96992b
+# ╠═4010aded-b562-4407-bd2f-aff0722fcac2
+# ╠═6778a88f-9455-4082-8122-8aa3ab39f102
 # ╠═cddbe5a2-d31a-47db-9ce2-7baa1b9b253f
 # ╠═3c1f401d-647d-40d1-911d-72b96f3b40ba
+# ╠═e78978da-e232-4739-860e-6e55b8d9a0ef
+# ╠═bc868670-134c-4dd4-97a7-c5cee7e1994f
+# ╠═be5e2e7c-cbef-4830-994f-556aaa43ad36
+# ╠═36215464-d727-4d5e-b86b-c83c66d8b7b6
+# ╠═17c43d95-b1fc-4578-886c-6b2848cca55b
+# ╠═0c088b8f-24a0-4593-b3f7-29b8fb734455
+# ╠═f2648850-6266-4f1a-aa07-6687f031b972
+# ╠═72e5c9d6-2a4b-47c5-be2a-f3a9680558b9
+# ╠═454a3771-d211-4e3f-950e-e600779fb9f0
+# ╠═db6ddeab-c433-4c87-a6f2-7903cb0d7eac
+# ╠═aeff9cba-b992-4b5b-857b-85f3c35f6cb5
 # ╠═5e981696-4955-4951-8215-4f7eea3eb2c6
+# ╠═e8cba01b-a0b5-42ce-a661-2ca3dcef7821
+# ╠═0a193abf-4051-474f-b9b1-94018746f78d
+# ╠═d901cace-3f8a-40f5-8deb-e4e0144257ab
 # ╠═b5831de7-fe61-4a10-bfbf-ca74676176c3
+# ╠═9ac77af2-00cc-4848-8873-bc2df5db6dab
+# ╠═5871e101-da65-4ee4-ba80-fb0bd4988e5d
 # ╠═e56e4e7f-15bd-45ea-b44a-51ec42ccbb84
+# ╠═7ea031f8-92c7-4683-88be-0bc91929cc79
+# ╠═8d1405e1-a945-401e-bccd-a98a87a2f344
+# ╠═a202bdb6-68d1-486b-8650-0fe54641cab7
 # ╠═5b092c44-bfd0-4e4c-878a-e6663056e43e
 # ╠═585734d1-a716-4531-ae9e-8a42a2199415
+# ╠═19ec7991-308b-4268-bca8-4761453725e3
+# ╠═e564bf60-b461-4c92-b376-b50060199522
+# ╠═05aaef9b-6547-4ac4-9bd5-e68c46befbc0
+# ╠═f0a599e7-c244-474f-916e-f273ea99b0fd
+# ╠═45842349-8c37-4769-990a-949f15962398
+# ╠═75101f0f-d568-4793-8b2b-f4a2e19d4484
+# ╠═e9666346-6fa6-444d-840e-6351ca888da0
 # ╠═67e7c046-9136-41c1-b558-3f3cc07453be
+# ╠═7c169ecc-ca8b-468e-bf00-41b53f495513
+# ╠═ffae66b7-126b-46c0-a48c-bd9374ee419c
+# ╠═6892be95-f9ed-4b5e-b63c-69f9e16c08ff
+# ╠═29fc1e15-d4ad-43a6-ac0e-60c8552ecddf
+# ╠═fa599fd3-31fa-47f2-b1c9-65da9d6d71a6
+# ╠═7d939bbc-59f2-49ae-b17a-e9c6ec4cb46c
+# ╠═1925090f-5c19-4f46-b4fd-6088a73ca85a
+# ╠═715b5071-36d1-4c7d-9a52-ed2287457afa
 # ╠═a33e6f1c-6219-491a-84cf-7fa01ec08296
 # ╠═06cb4f2c-37e9-4ee2-9118-0559343d5039
